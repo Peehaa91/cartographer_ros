@@ -16,12 +16,14 @@
 
 <launch>
   <param name="/use_sim_time" value="true" />
-  <arg name="bag_filename" value="$(env HOME)/U/bags/b3-2016-04-05-14-14-00.bag"/>
+  <arg name="bag_filename" value="/mrtstorage/rosbags/unit_test/test_calib_laser_camera.bag" /><!--$(env HOME)/U/bags/b3-2016-04-05-14-14-00.bag"/-->
 
-  <include file="$(find cartographer_ros)/launch/backpack_3d.launch" />
+  <include file="$(find cartographer_ros)/launch/backpack_3d_mrt.launch" />
 
   <node name="rviz" pkg="rviz" type="rviz" required="true"
       args="-d $(find cartographer_ros)/configuration_files/demo_3d.rviz" />
+  <!--include file="$(find sensor_velodyne_pointcloud_ros_tool)/launch/scan_converter_standalone.launch"/-->
+  <node name="imu_publisher" pkg="cartographer_ros" type="imu_publisher.py"/>
   <node name="playbag" pkg="rosbag" type="play"
       args="--clock $(arg bag_filename)" />
 </launch>

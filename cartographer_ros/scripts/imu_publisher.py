@@ -6,7 +6,7 @@ from geometry_msgs.msg import Vector3, Quaternion
 import tf
 import math
 def talker():
-    pub = rospy.Publisher('imu', Imu, queue_size=10)
+    pub = rospy.Publisher('imu_fake', Imu, queue_size=10)
     rospy.init_node('imu_publisher', anonymous=True)
     rate = rospy.Rate(30)
     imu_msg = Imu()
@@ -16,19 +16,16 @@ def talker():
         rate.sleep()
         imu_msg.header.stamp = rospy.get_rostime()
         lin_acc = Vector3()
-        lin_acc.x = 0.1
+        lin_acc.z = -9.81
 
         orientation = Quaternion()
-        roll = math.pi/2
-        pitch = 0
-        yaw = 0
         #orientation = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
         #imu_msg.orientation.x = orientation[0]
         #imu_msg.orientation.y = orientation[1]
         #imu_msg.orientation.z = orientation[2]
         #imu_msg.orientation.w = orientation[3]
-        orientation.w = 1
         imu_msg.orientation= orientation
+        imu_msg.orientation_covariance = [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         imu_msg.linear_acceleration = lin_acc
         pub.publish(imu_msg)
 
