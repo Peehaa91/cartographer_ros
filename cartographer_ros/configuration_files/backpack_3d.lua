@@ -28,6 +28,7 @@ options = {
   lookup_transform_timeout_sec = 0.2,
   submap_publish_period_sec = 0.3,
   pose_publish_period_sec = 5e-3,
+  ground_plane_detection = false,
 }
 
 TRAJECTORY_BUILDER_3D.scans_per_accumulation = 160

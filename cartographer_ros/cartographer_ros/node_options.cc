@@ -47,6 +47,8 @@ NodeOptions CreateNodeOptions(
       lua_parameter_dictionary->GetDouble("submap_publish_period_sec");
   options.pose_publish_period_sec =
       lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
+  options.ground_plane_detection =
+	  lua_parameter_dictionary->GetBool("ground_plane_detection");
 
   CHECK_EQ(options.use_laser_scan + options.use_multi_echo_laser_scan +
                (options.num_point_clouds > 0),

@@ -29,6 +29,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/MultiEchoLaserScan.h"
 #include "sensor_msgs/PointCloud2.h"
+#include <cartographer_ros_msgs/PlaneStamped.h>
 
 namespace cartographer_ros {
 
@@ -55,6 +56,9 @@ class SensorBridge {
   void HandlePointCloud2Message(const string& sensor_id,
                                 const sensor_msgs::PointCloud2::ConstPtr& msg);
 
+  void HandlePlaneMessage(const string& sensor_id,
+		  	  	  	  	  const cartographer_ros_msgs::PlaneStamped::ConstPtr& msg);
+
   const TfBridge& tf_bridge() const;
 
  private:
@@ -64,6 +68,10 @@ class SensorBridge {
                          const ::cartographer::sensor::PointCloud& ranges);
 
   const TfBridge tf_bridge_;
+  double last_yaw_;
+  double last_roll_;
+  double last_pitch_;
+  ros::Time last_plane_msg_time_;
   ::cartographer::mapping::TrajectoryBuilder* const trajectory_builder_;
 };
 

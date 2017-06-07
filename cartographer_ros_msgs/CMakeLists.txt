@@ -18,6 +18,8 @@ project(cartographer_ros_msgs)
 
 set(PACKAGE_DEPENDENCIES
   geometry_msgs
+  shape_msgs
+  std_msgs
 )
 
 find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIES})
@@ -27,6 +29,7 @@ add_message_files(
     SubmapList.msg
     TrajectorySubmapList.msg
     SubmapEntry.msg
+    PlaneStamped.msg
 )
 
 add_service_files(
@@ -38,6 +41,8 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
     geometry_msgs
+    shape_msgs
+    std_msgs
 )
 
 catkin_package(

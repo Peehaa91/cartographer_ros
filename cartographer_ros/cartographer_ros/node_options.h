@@ -41,6 +41,7 @@ struct NodeOptions {
   double lookup_transform_timeout_sec;
   double submap_publish_period_sec;
   double pose_publish_period_sec;
+  bool ground_plane_detection;
 };
 
 NodeOptions CreateNodeOptions(

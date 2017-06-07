@@ -25,6 +25,7 @@
 #include "cartographer_ros/ros_log_sink.h"
 #include "gflags/gflags.h"
 #include "tf2_ros/transform_listener.h"
+#include <cartographer_ros_msgs/PlaneStamped.h>
 
 DEFINE_string(configuration_directory, "",
               "First directory in which configuration files are searched, "
@@ -108,6 +109,17 @@ void Run() {
     }
   }
 
+  ros::Subscriber ground_plane_subscriber;
+  if (options.ground_plane_detection) {
+    ground_plane_subscriber = node.node_handle()->subscribe("ground_plane",
+    		kInfiniteSubscriberQueueSize,
+			boost::function<void(const::cartographer_ros_msgs::PlaneStamped::ConstPtr& msg)>(
+				[&](const::cartographer_ros_msgs::PlaneStamped::ConstPtr& msg) {
+				  node.map_builder_bridge()
+					  ->sensor_bridge(trajectory_id)
+					  ->HandlePlaneMessage("ground_plane", msg);}));
+    expected_sensor_ids.insert(kImuTopic);
+  }
   // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
   // required.
   ::ros::Subscriber imu_subscriber;

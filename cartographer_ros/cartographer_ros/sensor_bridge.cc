@@ -19,6 +19,7 @@
 #include "cartographer/kalman_filter/pose_tracker.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
+#include <tf/transform_datatypes.h>
 
 namespace cartographer_ros {
 
@@ -42,7 +43,12 @@ SensorBridge::SensorBridge(
     tf2_ros::Buffer* const tf_buffer,
     carto::mapping::TrajectoryBuilder* const trajectory_builder)
     : tf_bridge_(tracking_frame, lookup_transform_timeout_sec, tf_buffer),
-      trajectory_builder_(trajectory_builder) {}
+      trajectory_builder_(trajectory_builder) {
+	last_yaw_ = 0;
+	last_roll_ = 0;
+	last_pitch_ = 0;
+	last_plane_msg_time_ = ros::Time(0);
+}
 
 void SensorBridge::HandleOdometryMessage(
     const string& sensor_id, const nav_msgs::Odometry::ConstPtr& msg) {
@@ -114,6 +120,73 @@ void SensorBridge::HandleRangefinder(const string& sensor_id,
         carto::sensor::TransformPointCloud(ranges,
                                            sensor_to_tracking->cast<float>()));
   }
+}
+
+void SensorBridge::HandlePlaneMessage(
+	const string& sensor_id, const cartographer_ros_msgs::PlaneStamped::ConstPtr& msg)
+{
+////	ROS_WARN_STREAM("Plane Received: "<<"a: "<<msg->plane.coef[0]<<" b: "<<msg->plane.coef[1]<<" c: "<<msg->plane.coef[2]
+////								      <<" d: "<<msg->plane.coef[3]);
+//	shape_msgs::Plane plane = msg->plane;
+//	Eigen::Vector3f norm_vec_plane = Eigen::Vector3f(plane.coef[0], plane.coef[1], plane.coef[3]);
+//	norm_vec_plane.normalize();
+//	Eigen::Vector3f rot_axis = norm_vec_plane + Eigen::Vector3f(0,0,1);
+//	rot_axis.normalize();
+//	Eigen::Vector3f axis = rot_axis.cross(norm_vec_plane);
+//	double angle = rot_axis.dot(norm_vec_plane);
+//    /*double angle = std::acos(fabs(norm_vec_plane(0)*0 + norm_vec_plane(1)* 0+ norm_vec_plane(2)*1)
+//    		/std::sqrt(norm_vec_plane(0)* norm_vec_plane(0) + norm_vec_plane(1)* norm_vec_plane(1) + norm_vec_plane(2)* norm_vec_plane(2)));*/
+//    //angle_xy_plane = angle_xy_plane*(180/M_PI);
+//    tf::Quaternion q = tf::Quaternion(axis(0), axis(1), axis(2), angle);
+//    q.normalize();
+//	//ROS_WARN_STREAM("angle: "<<q.getAngle()*180/M_PI);
+//	geometry_msgs::Quaternion q_msg;
+////	q_msg.x = q.;
+////	q_msg.y = q.y;
+////	q_msg.z = q.z;
+////	q_msg.w = q.w;
+////	Eigen::Vector3d lin_acc = ToEigen(msg->linear_acceleration);
+//	tf::Matrix3x3 m(q);
+//	double roll, pitch, yaw;
+//	m.getRPY(roll, pitch, yaw);
+//	//ROS_WARN_STREAM("roll: "<<roll*180/M_PI<<" pitch: "<<pitch*180/M_PI<<" yaw: "<<yaw*180/M_PI);
+//
+//	if (last_plane_msg_time_ == ros::Time(0))
+//	{
+//		last_plane_msg_time_ = msg->header.stamp;
+//		last_yaw_ = yaw;
+//		last_roll_ = roll;
+//		last_pitch_ = pitch;
+//		return;
+//	}
+//	Eigen::Vector3d lin_acc = Eigen::Vector3d(0,0,-9.81);
+//	ros::Duration delta = msg->header.stamp - last_plane_msg_time_;
+//	double delta_t = double(delta.sec) + double(delta.nsec)*1e-9;
+//	//Eigen::Vector3d ang_vel = Eigen::Vector3d((roll - last_roll_)/delta_t,(pitch - last_pitch_)/delta_t,(yaw - last_yaw_)/delta_t);
+//	Eigen::Vector3d ang_vel = Eigen::Vector3d(0,0,0);
+//	last_plane_msg_time_ = msg->header.stamp;
+//	last_yaw_ = yaw;
+//	last_roll_ = roll;
+//	last_pitch_ = pitch;
+//
+//	const carto::common::Time time = FromRos(msg->header.stamp);
+//	const auto sensor_to_tracking = tf_bridge_.LookupToTracking(
+//			time, CheckNoLeadingSlash("imu_link"));
+//	if (sensor_to_tracking != nullptr) {
+//	CHECK(sensor_to_tracking->translation().norm() < 1e-5)
+//		<< "The plane frame must be colocated with the tracking frame. "
+//		   "Transforming linear acceleration into the tracking frame will "
+//		   "otherwise be imprecise.";
+//	//ROS_INFO_STREAM("PLANE:"<<time);
+//	trajectory_builder_->AddImuData(
+//		"imu", time,
+//		sensor_to_tracking->rotation() * lin_acc,
+//		sensor_to_tracking->rotation() * ang_vel);}
+//	else
+//	  ROS_ERROR_STREAM("not found");
+//
+//    //tf::createQuaternionFromRPY(0,-angle_xy_plane,0);
+
 }
 
 }  // namespace cartographer_ros
