@@ -15,20 +15,13 @@
 -->
 
 <launch>
-  <param name="robot_description"
-    textfile="$(find cartographer_ros)/urdf/backpack_3d_mrt.urdf" />
-
-  <node name="robot_state_publisher" pkg="robot_state_publisher"
-    type="robot_state_publisher" />
-
-  <node name="cartographer_node" pkg="cartographer_ros"
-      type="cartographer_node" args="
+  <node name="cartographer_assets_writer" pkg="cartographer_ros" required="true"
+      type="cartographer_assets_writer" args="
           -configuration_directory $(find cartographer_ros)/configuration_files
-          -configuration_basename backpack_3d_mrt.lua" output="screen">
-    <remap from="points2" to="sensor/velodyne/cloud_euclidean" />
-    <!--remap from="points2_1" to="horizontal_laser_3d" />
-    <remap from="points2_2" to="vertical_laser_3d" /-->
-    <remap from="imu" to="imu_fake"/>
-    <!--remap from="scan_matched_points2" to="/sensor/velodyne/cloud_euclidean" /-->
+          -configuration_basename assets_writer_backpack_3d.lua
+          -urdf_filename $(find cartographer_ros)/urdf/backpack_3d.urdf
+          -bag_filename $(arg bag_filenames)
+          -trajectory_filename $(arg trajectory_filename)"
+      output="screen">
   </node>
 </launch>

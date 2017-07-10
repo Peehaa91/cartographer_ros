@@ -16,11 +16,12 @@
 
 <launch>
   <param name="/use_sim_time" value="true" />
-  <arg name="bag_filename" value="/mrtstorage/rosbags/2017-05-19_laser_demonstrator_maschinenhalle/sensor_horizontal_drive.bag"/>
+  <arg name="bag_filename" value="/mrtstorage/rosbags/unit_test/test_calib_laser_camera.bag"/>
+  <!--"/mrtstorage/rosbags/2017-05-19_laser_demonstrator_maschinenhalle/sensor_horizontal_drive.bag"/-->
   <!--"/mrtstorage/rosbags/unit_test/test_calib_laser_camera.bag" /--><!--$(env HOME)/U/bags/b3-2016-04-05-14-14-00.bag"/-->
 
   <include file="$(find cartographer_ros)/launch/backpack_3d_mrt.launch" />
-
+  <include file="$(find pointcloud_surface_ros_tool)/launch/plane_segmentation_node.launch"/>
   <node name="rviz" pkg="rviz" type="rviz" required="true"
       args="-d $(find cartographer_ros)/configuration_files/demo_mrt_3d.rviz" />
   <!--include file="$(find sensor_velodyne_pointcloud_ros_tool)/launch/scan_converter_standalone.launch"/-->

@@ -30,12 +30,16 @@ add_message_files(
     TrajectorySubmapList.msg
     SubmapEntry.msg
     PlaneStamped.msg
+    SensorTopics.msg
+    TrajectoryOptions.msg
 )
 
 add_service_files(
   FILES
     SubmapQuery.srv
     FinishTrajectory.srv
+    StartTrajectory.srv
+    WriteAssets.srv
 )
 
 generate_messages(

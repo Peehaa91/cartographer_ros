@@ -64,8 +64,17 @@ void SensorBridge::HandleOdometryMessage(
 
 void SensorBridge::HandleImuMessage(const string& sensor_id,
                                     const sensor_msgs::Imu::ConstPtr& msg) {
-  CHECK_NE(msg->linear_acceleration_covariance[0], -1);
-  CHECK_NE(msg->angular_velocity_covariance[0], -1);
+  CHECK_NE(msg->linear_acceleration_covariance[0], -1)
+      << "Your IMU data claims to not contain linear acceleration measurements "
+         "by setting linear_acceleration_covariance[0] to -1. Cartographer "
+         "requires this data to work. See "
+         "http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html.";
+  CHECK_NE(msg->angular_velocity_covariance[0], -1)
+      << "Your IMU data claims to not contain angular velocity measurements "
+         "by setting angular_velocity_covariance[0] to -1. Cartographer "
+         "requires this data to work. See "
+         "http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html.";
+
   const carto::common::Time time = FromRos(msg->header.stamp);
   const auto sensor_to_tracking = tf_bridge_.LookupToTracking(
       time, CheckNoLeadingSlash(msg->header.frame_id));
@@ -84,14 +93,14 @@ void SensorBridge::HandleImuMessage(const string& sensor_id,
 void SensorBridge::HandleLaserScanMessage(
     const string& sensor_id, const sensor_msgs::LaserScan::ConstPtr& msg) {
   HandleRangefinder(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                    carto::sensor::ToPointCloud(ToCartographer(*msg)));
+                    ToPointCloudWithIntensities(*msg).points);
 }
 
 void SensorBridge::HandleMultiEchoLaserScanMessage(
     const string& sensor_id,
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
   HandleRangefinder(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                    carto::sensor::ToPointCloud(ToCartographer(*msg)));
+                    ToPointCloudWithIntensities(*msg).points);
 }
 
 void SensorBridge::HandlePointCloud2Message(
@@ -125,6 +134,16 @@ void SensorBridge::HandleRangefinder(const string& sensor_id,
 void SensorBridge::HandlePlaneMessage(
 	const string& sensor_id, const cartographer_ros_msgs::PlaneStamped::ConstPtr& msg)
 {
+	const carto::common::Time time = FromRos(msg->header.stamp);
+    const auto sensor_to_tracking = tf_bridge_.LookupToTracking(
+	    time, CheckNoLeadingSlash(msg->header.frame_id));
+    if (sensor_to_tracking != nullptr) {
+      Eigen::Vector4d coefficients = Eigen::Vector4d(msg->plane.coef[0], msg->plane.coef[1],
+    		  msg->plane.coef[2], msg->plane.coef[3]);
+	  trajectory_builder_->AddPlaneData(
+		  sensor_id, time,
+		  coefficients);
+    }
 ////	ROS_WARN_STREAM("Plane Received: "<<"a: "<<msg->plane.coef[0]<<" b: "<<msg->plane.coef[1]<<" c: "<<msg->plane.coef[2]
 ////								      <<" d: "<<msg->plane.coef[3]);
 //	shape_msgs::Plane plane = msg->plane;
