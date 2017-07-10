@@ -16,6 +16,8 @@
 
 #include "cartographer_ros/occupancy_grid.h"
 
+#include <memory>
+
 #include "cartographer/common/time.h"
 #include "cartographer/sensor/range_data.h"
 #include "gtest/gtest.h"
@@ -25,21 +27,20 @@ namespace cartographer_ros {
 namespace {
 
 TEST(OccupancyGridTest, ComputeMapLimits) {
-  constexpr int kTrajectoryId = 0;
-  const ::cartographer::mapping::TrajectoryNode::ConstantData constant_data{
-      ::cartographer::common::FromUniversal(52),
-      ::cartographer::sensor::RangeData{
-          Eigen::Vector3f::Zero(),
-          {Eigen::Vector3f(-30.f, 1.f, 0.f), Eigen::Vector3f(50.f, -10.f, 0.f)},
-          {}},
-      ::cartographer::sensor::Compress(
-          ::cartographer::sensor::RangeData{Eigen::Vector3f::Zero(), {}, {}}),
-      kTrajectoryId, ::cartographer::transform::Rigid3d::Identity()};
-  const ::cartographer::mapping::TrajectoryNode trajectory_node{
-      &constant_data, ::cartographer::transform::Rigid3d::Identity()};
+  using ::cartographer::mapping::TrajectoryNode;
+  const TrajectoryNode trajectory_node{
+      std::make_shared<TrajectoryNode::Data>(TrajectoryNode::Data{
+          ::cartographer::common::FromUniversal(52),
+          ::cartographer::sensor::Compress(::cartographer::sensor::RangeData{
+              Eigen::Vector3f::Zero(),
+              {Eigen::Vector3f(-30.f, 1.f, 0.f),
+               Eigen::Vector3f(50.f, -10.f, 0.f)},
+              {}}),
+          ::cartographer::transform::Rigid3d::Identity()}),
+      ::cartographer::transform::Rigid3d::Identity()};
   constexpr double kResolution = 0.05;
   const ::cartographer::mapping_2d::MapLimits limits =
-      ComputeMapLimits(kResolution, {trajectory_node});
+      ComputeMapLimits(kResolution, {{trajectory_node}});
   constexpr float kPaddingAwareTolerance = 5 * kResolution;
   EXPECT_NEAR(50.f, limits.max().x(), kPaddingAwareTolerance);
   EXPECT_NEAR(1.f, limits.max().y(), kPaddingAwareTolerance);

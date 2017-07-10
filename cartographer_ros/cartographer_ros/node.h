@@ -22,6 +22,7 @@
 
 #include "cartographer/common/mutex.h"
 #include "cartographer_ros/map_builder_bridge.h"
+#include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/trajectory_options.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
@@ -31,26 +32,11 @@
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "cartographer_ros_msgs/TrajectoryOptions.h"
-#include "cartographer_ros_msgs/TrajectorySubmapList.h"
 #include "cartographer_ros_msgs/WriteAssets.h"
 #include "ros/ros.h"
 #include "tf2_ros/transform_broadcaster.h"
 
 namespace cartographer_ros {
-
-// Default topic names; expected to be remapped as needed.
-constexpr char kLaserScanTopic[] = "scan";
-constexpr char kMultiEchoLaserScanTopic[] = "echoes";
-constexpr char kPointCloud2Topic[] = "points2";
-constexpr char kImuTopic[] = "imu";
-constexpr char kOdometryTopic[] = "odom";
-constexpr char kFinishTrajectoryServiceName[] = "finish_trajectory";
-constexpr char kOccupancyGridTopic[] = "map";
-constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
-constexpr char kSubmapListTopic[] = "submap_list";
-constexpr char kSubmapQueryServiceName[] = "submap_query";
-constexpr char kStartTrajectoryServiceName[] = "start_trajectory";
-constexpr char kWriteAssetsServiceName[] = "write_assets";
 
 // Wires up ROS topics to SLAM.
 class Node {
@@ -66,6 +52,9 @@ class Node {
 
   // Starts the first trajectory with the default topics.
   void StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options);
+
+  // Loads a persisted state to use as a map.
+  void LoadMap(const std::string& map_filename);
 
   ::ros::NodeHandle* node_handle();
   MapBuilderBridge* map_builder_bridge();
@@ -90,6 +79,8 @@ class Node {
                          int trajectory_id);
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
+  void PublishTrajectoryNodeList(const ::ros::WallTimerEvent& timer_event);
+  void PublishConstraintList(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
   bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
   bool ValidateTopicName(const ::cartographer_ros_msgs::SensorTopics& topics,
@@ -104,6 +95,8 @@ class Node {
 
   ::ros::NodeHandle node_handle_;
   ::ros::Publisher submap_list_publisher_;
+  ::ros::Publisher trajectory_node_list_publisher_;
+  ::ros::Publisher constraint_list_publisher_;
   // These ros::ServiceServers need to live for the lifetime of the node.
   std::vector<::ros::ServiceServer> service_servers_;
   ::ros::Publisher scan_matched_point_cloud_publisher_;

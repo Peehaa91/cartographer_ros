@@ -34,8 +34,11 @@ NodeOptions CreateNodeOptions(
       lua_parameter_dictionary->GetDouble("submap_publish_period_sec");
   options.pose_publish_period_sec =
       lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
+  options.trajectory_publish_period_sec =
+      lua_parameter_dictionary->GetDouble("trajectory_publish_period_sec");
   options.ground_plane_detection =
 	  lua_parameter_dictionary->GetBool("ground_plane_detection");
+
 
   return options;
 }

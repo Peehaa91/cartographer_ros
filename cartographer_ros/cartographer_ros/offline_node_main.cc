@@ -26,6 +26,7 @@
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
+#include "cartographer_ros/split_string.h"
 #include "cartographer_ros/urdf_reader.h"
 #include "gflags/gflags.h"
 #include "ros/callback_queue.h"
@@ -49,6 +50,8 @@ DEFINE_string(
     "URDF file that contains static links for your sensor configuration.");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish the transforms from the bag.");
+DEFINE_string(pbstream_filename, "",
+              "If non-empty, filename of a pbstream to load.");
 
 namespace cartographer_ros {
 namespace {
@@ -61,16 +64,6 @@ constexpr int kLatestOnlyPublisherQueueSize = 1;
 volatile std::sig_atomic_t sigint_triggered = 0;
 
 void SigintHandler(int) { sigint_triggered = 1; }
-
-std::vector<string> SplitString(const string& input, const char delimiter) {
-  std::stringstream stream(input);
-  string token;
-  std::vector<string> tokens;
-  while (std::getline(stream, token, delimiter)) {
-    tokens.push_back(token);
-  }
-  return tokens;
-}
 
 // TODO(hrapp): This is duplicated in node_main.cc. Pull out into a config
 // unit.
@@ -107,6 +100,11 @@ void Run(const std::vector<string>& bag_filenames) {
   // remaining sensor data that cannot be transformed due to missing transforms.
   node_options.lookup_transform_timeout_sec = 0.;
   Node node(node_options, &tf_buffer);
+  if (!FLAGS_pbstream_filename.empty()) {
+    // TODO(jihoonl): LoadMap should be replaced by some better deserialization
+    // of full SLAM state as non-frozen trajectories once possible
+    node.LoadMap(FLAGS_pbstream_filename);
+  }
 
   std::unordered_set<string> expected_sensor_ids;
   const auto check_insert = [&expected_sensor_ids, &node](const string& topic) {
@@ -202,7 +200,7 @@ void Run(const std::vector<string>& bag_filenames) {
 
       while (!delayed_messages.empty() &&
              delayed_messages.front().getTime() <
-                 msg.getTime() + ::ros::Duration(1.)) {
+                 msg.getTime() - ::ros::Duration(1.)) {
         const rosbag::MessageInstance& delayed_msg = delayed_messages.front();
         const string topic = node.node_handle()->resolveName(
             delayed_msg.getTopic(), false /* resolve */);
@@ -237,6 +235,16 @@ void Run(const std::vector<string>& bag_filenames) {
               ->HandleOdometryMessage(
                   topic, delayed_msg.instantiate<nav_msgs::Odometry>());
         }
+        rosgraph_msgs::Clock clock;
+        clock.clock = delayed_msg.getTime();
+        clock_publisher.publish(clock);
+
+        ::ros::spinOnce();
+
+        LOG_EVERY_N(INFO, 100000)
+            << "Processed " << (delayed_msg.getTime() - begin_time).toSec()
+            << " of " << duration_in_seconds << " bag time seconds...";
+
         delayed_messages.pop_front();
       }
 
@@ -246,22 +254,13 @@ void Run(const std::vector<string>& bag_filenames) {
         continue;
       }
       delayed_messages.push_back(msg);
-
-      rosgraph_msgs::Clock clock;
-      clock.clock = msg.getTime();
-      clock_publisher.publish(clock);
-
-      ::ros::spinOnce();
-
-      LOG_EVERY_N(INFO, 100000)
-          << "Processed " << (msg.getTime() - begin_time).toSec() << " of "
-          << duration_in_seconds << " bag time seconds...";
     }
 
     bag.close();
     node.map_builder_bridge()->FinishTrajectory(trajectory_id);
   }
 
+  node.map_builder_bridge()->SerializeState(bag_filenames.front());
   node.map_builder_bridge()->WriteAssets(bag_filenames.front());
 }
 
