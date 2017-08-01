@@ -16,10 +16,10 @@
 
 <launch>
   <param name="/use_sim_time" value="true" />
-  <arg name="bag_filename" value="$(env HOME)/U/bags/b3-2016-04-05-14-14-00.bag"/>
+  <arg name="bag_filename" value="$(env HOME)/U/bags/small_google_3d.bag"/>
 
   <include file="$(find cartographer_ros)/launch/backpack_3d.launch" />
-  <node name="imu_publisher" pkg="cartographer_ros" type="imu_publisher.py" />
+  <!--node name="imu_publisher" pkg="cartographer_ros" type="imu_publisher.py" /-->
 
   <node name="rviz" pkg="rviz" type="rviz" required="true"
       args="-d $(find cartographer_ros)/configuration_files/demo_3d.rviz" />

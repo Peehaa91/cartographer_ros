@@ -338,7 +338,6 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
 				 (const cartographer_ros_msgs::PlaneStamped::ConstPtr& msg) {
     				map_builder_bridge_.sensor_bridge(trajectory_id)->HandlePlaneMessage("ground_plane", msg);
     }));
-    expected_sensor_ids.insert("ground_plane");
   }
 
   if (options.trajectory_builder_options.trajectory_builder_2d_options()
