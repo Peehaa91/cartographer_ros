@@ -16,6 +16,7 @@
 
 <launch>
   <param name="/use_sim_time" value="true" />
+  <arg name="bag_filenames" value="$(env HOME)/U/bags/small_google_3d.bag"/>
 
   <node name="rviz" pkg="rviz" type="rviz" required="true"
       args="-d $(find cartographer_ros)/configuration_files/demo_3d.rviz" />
